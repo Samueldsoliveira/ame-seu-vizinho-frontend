@@ -6,7 +6,7 @@ const App = () => {
   const PIX_KEY = "ivvcentro@ccvideira.com.br";
   const BASKET_COST = 35;
 
-  const API_BASE_URL = "https://ame-seu-vizinho-api.onrender.com";
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const [currentUser, setCurrentUser] = useState(null);
   const [donations, setDonations] = useState([]);
