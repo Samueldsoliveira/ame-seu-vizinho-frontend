@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import Chart from "chart.js/auto";
 import { useEffect, useRef, useState } from "react";
 import ASVLogo from "../src/assets/ASV 2.png";
@@ -14,6 +15,8 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const triboSelectRef = useRef(null);
   const chartRef = useRef(null);
+  const [showMoneyForTribe, setShowMoneyForTribe] = useState(true);
+  const [password, setPassword] = useState("");
   let tribosChartInstance = useRef(null);
 
   const TRIBES = {
@@ -67,16 +70,9 @@ const App = () => {
     const totalDonated = donations.reduce((sum, d) => sum + d.valor_doado, 0); // Usa valor_doado do backend
     const totalBaskets = Math.floor(totalDonated / BASKET_COST);
 
-    // Sua Tribo Arrecadou continua sendo apenas da tribo logada
-    const userTribeDonated = donations
-      .filter((d) => d.tribo === currentUser.id)
-      .reduce((sum, d) => sum + d.valor_doado, 0); // Usa valor_doado do backend
-
     document.getElementById("total-arrecadado").textContent =
       formatCurrency(totalDonated);
     document.getElementById("total-cestas").textContent = totalBaskets;
-    document.getElementById("tribo-arrecadado").textContent =
-      formatCurrency(userTribeDonated);
   };
 
   const updateChart = () => {
@@ -299,13 +295,15 @@ const App = () => {
         "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
       );
     } finally {
-      setIsLoading(false); // Finaliza loading
+      setIsLoading(false);
     }
   };
 
   const performLogin = async () => {
     const selectedTribeId = triboSelectRef.current.value;
-    setIsLoading(true); // Inicia loading
+    const enteredPassword = password;
+
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -313,7 +311,10 @@ const App = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ triboId: selectedTribeId }),
+        body: JSON.stringify({
+          triboId: selectedTribeId,
+          password: enteredPassword,
+        }),
       });
 
       const result = await response.json();
@@ -422,6 +423,23 @@ const App = () => {
                 <option value="safe">Tribo Safe</option>
               </select>
             </div>
+            <div>
+              <label
+                htmlFor="password-input"
+                className="block text-sm font-medium text-stone-700"
+              >
+                Senha
+              </label>
+              <input
+                type="password"
+                id="password-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 bg-white border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                placeholder="Digite a senha da tribo"
+                required
+              />
+            </div>
             <button
               onClick={performLogin}
               disabled={isLoading}
@@ -434,7 +452,6 @@ const App = () => {
             Gestão de Doações - Ame seu vizinho A13 School
           </p>
         </div>
-        {/* Message Box for alerts */}
         <div
           id="messageBox"
           className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden"
@@ -523,13 +540,39 @@ const App = () => {
                 </p>
               </div>
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+            <div className="bg-white p-6 rounded-xl shadow-lg flex items-center justify-between">
               <div>
-                <p className="text-sm text-stone-500">Sua Tribo Arrecadou</p>
-                <p id="tribo-arrecadado" className="text-3xl font-bold">
-                  R$0,00
+                <p className="text-sm text-stone-500">
+                  {showMoneyForTribe
+                    ? "Sua Tribo Arrecadou"
+                    : "Cestas da Sua Tribo"}
+                </p>
+                <p className="text-3xl font-bold">
+                  {showMoneyForTribe
+                    ? formatCurrency(
+                        donations
+                          .filter((d) => d.tribo === currentUser.id)
+                          .reduce((sum, d) => sum + d.valor_doado, 0)
+                      )
+                    : Math.floor(
+                        donations
+                          .filter((d) => d.tribo === currentUser.id)
+                          .reduce((sum, d) => sum + d.valor_doado, 0) /
+                          BASKET_COST
+                      )}
                 </p>
               </div>
+              <button
+                onClick={() => setShowMoneyForTribe(!showMoneyForTribe)}
+                className="p-2 bg-teal-100 text-teal-700 rounded-full hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                title={
+                  showMoneyForTribe
+                    ? "Ver Cestas Básicas"
+                    : "Ver Valor em Dinheiro"
+                }
+              >
+                ↔
+              </button>
             </div>
           </div>
         </section>
@@ -544,7 +587,7 @@ const App = () => {
           <p className="text-sm text-stone-600 mb-4">
             Acompanhe a competição amigável! Este gráfico compara o total
             arrecadado por cada tribo, atualizado em tempo real. Passe o mouse
-            sobre as barras para ver os em média (NÃO PRECISOS).
+            sobre as barras para ver os números das tribos.
           </p>
           <div className="chart-container">
             <canvas ref={chartRef}></canvas>
