@@ -217,6 +217,15 @@ const App = () => {
   };
 
   const handleSubmitAllDonations = async () => {
+    if (!currentUser || !currentUser.userId || !currentUser.id) {
+      showMessageBox(
+        "Erro de Autenticação",
+        "Por favor, faça login novamente. Dados do usuário não encontrados para registrar a doação."
+      );
+      setIsLoading(false); // Garante que o loading pare se já estiver ativo
+      return; // Impede a continuação da função se o usuário não estiver logado corretamente
+    }
+
     let allValid = true;
     const donationsDataToSend = [];
     const filesToUpload = [];
@@ -253,12 +262,12 @@ const App = () => {
       return;
     }
 
-    setIsLoading(true); // Inicia loading
+    setIsLoading(true);
 
     const formData = new FormData();
     formData.append("donations", JSON.stringify(donationsDataToSend));
-    formData.append("responsavelId", currentUser.userId); // Adiciona o userId do responsável
-    formData.append("tribo", currentUser.id); // Adiciona a tribo do responsável
+    formData.append("responsavelId", currentUser.userId);
+    formData.append("tribo", currentUser.id);
 
     filesToUpload.forEach((file) => {
       formData.append(`receipts`, file); // O backend espera um array de arquivos com o mesmo nome 'receipts'
@@ -392,7 +401,6 @@ const App = () => {
     }
   };
 
-  // Renderiza a tela de login se não houver usuário logado
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -476,7 +484,6 @@ const App = () => {
     );
   }
 
-  // Renderiza a aplicação principal se o usuário estiver logado
   return (
     <div className="bg-stone-50 text-stone-800 min-h-screen">
       <header className="bg-white shadow-sm">
@@ -756,7 +763,6 @@ const App = () => {
           </section>
         </div>
       </main>
-      {/* Message Box for alerts */}
       <div
         id="messageBox"
         className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden"
