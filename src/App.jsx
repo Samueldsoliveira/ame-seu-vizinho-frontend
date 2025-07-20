@@ -139,7 +139,7 @@ const App = () => {
       console.error("Erro ao fazer login:", error);
       showMessageBox(
         "Erro de Conexão",
-        "Não foi possível conectar ao servidor de autenticação. Verifique se o backend está rodando."
+        "Não foi possível conectar ao servidor de autenticação. Ocorreu um erro interno."
       );
     } finally {
       setIsLoading(false);
@@ -293,7 +293,7 @@ const App = () => {
       console.error("Erro ao enviar doações:", error);
       showMessageBox(
         "Erro de Conexão",
-        "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
+        "Não foi possível conectar ao servidor. Ocorreu um erro interno."
       );
     } finally {
       setIsLoading(false);
