@@ -1,5 +1,5 @@
 import { Eye, Pencil } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const RecentDonationsList = ({
   donations,
@@ -30,6 +30,10 @@ const RecentDonationsList = ({
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredDonations.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterTerm]);
 
   const goToNextPage = () => {
     setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
