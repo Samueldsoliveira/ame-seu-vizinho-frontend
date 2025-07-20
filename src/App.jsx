@@ -2,6 +2,7 @@
 import Chart from "chart.js/auto";
 import { useEffect, useRef, useState } from "react";
 import ASVLogo from "../src/assets/ASV 2.png";
+import { Eye, Pencil } from "lucide-react";
 
 const App = () => {
   const PIX_KEY = "ivvcentro@ccvideira.com.br";
@@ -17,6 +18,7 @@ const App = () => {
   const chartRef = useRef(null);
   const [showMoneyForTribe, setShowMoneyForTribe] = useState(true);
   const [password, setPassword] = useState("");
+  const [editingDonation, setEditingDonation] = useState(null);
   let tribosChartInstance = useRef(null);
 
   const TRIBES = {
@@ -29,6 +31,21 @@ const App = () => {
     document.getElementById("messageBoxTitle").textContent = title;
     document.getElementById("messageBoxContent").textContent = content;
     document.getElementById("messageBox").classList.remove("hidden");
+  };
+
+  const handleEditClick = (donation) => {
+    setEditingDonation({ ...donation });
+  };
+
+  const handleViewReceipt = (url) => {
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      showMessageBox(
+        "Comprovante Não Disponível",
+        "Esta doação não possui um comprovante anexado ou a URL está inválida."
+      );
+    }
   };
 
   useEffect(() => {
@@ -144,8 +161,9 @@ const App = () => {
       .filter((d) => d.tribo === currentUser.id)
       .sort(
         (a, b) =>
-          new Date(b.data_doacao) - new Date(a.data_doacao) || b.id - a.id
-      ); // Use data_doacao
+          new Date(b.data_doacao).getTime() -
+            new Date(a.data_doacao).getTime() || (b.id || 0) - (a.id || 0)
+      );
 
     if (userDonations.length === 0) {
       return (
@@ -156,19 +174,38 @@ const App = () => {
     }
 
     return userDonations.map((d) => (
-      <div key={d.id} className="bg-stone-50 p-3 rounded-lg">
-        <div className="flex justify-between items-start">
-          <p className="font-semibold">{d.nome_doador}</p>{" "}
-          {/* Use nome_doador */}
+      <div
+        key={d.id}
+        className="bg-stone-50 p-3 rounded-lg flex justify-between items-center"
+      >
+        <div>
+          <p className="font-semibold">{d.nome_doador}</p>
           <p className="font-bold text-teal-600">
             {formatCurrency(d.valor_doado)}
-          </p>{" "}
-          {/* Use valor_doado */}
+          </p>
+          <p className="text-xs text-stone-500">
+            {new Date(d.data_doacao).toLocaleDateString("pt-BR")} - Comprovante:{" "}
+            {d.url_comprovante ? "Anexado" : "Não Anexado"}
+          </p>
         </div>
-        <p className="text-xs text-stone-500">
-          {new Date(d.data_doacao).toLocaleDateString("pt-BR")} - Comprovante:{" "}
-          {d.url_comprovante ? "Anexado" : "Não Anexado"}
-        </p>
+        <div className="flex items-center space-x-2">
+          {d.url_comprovante && (
+            <button
+              onClick={() => handleViewReceipt(d.url_comprovante)}
+              className="p-2 text-stone-500 hover:text-blue-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
+              title="Ver Comprovante"
+            >
+              <Eye size={18} />
+            </button>
+          )}
+          <button
+            onClick={() => handleEditClick(d)}
+            className="p-2 text-stone-500 hover:text-teal-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
+            title="Editar Doação"
+          >
+            <Pencil size={18} />
+          </button>
+        </div>
       </div>
     ));
   };
@@ -484,6 +521,57 @@ const App = () => {
     );
   }
 
+  const handleUpdateDonation = async () => {
+    if (!editingDonation || !currentUser || !currentUser.userId) {
+      showMessageBox("Erro", "Dados inválidos para atualização.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/donations/${editingDonation.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome_doador: editingDonation.nome_doador,
+            valor_doado: parseFloat(editingDonation.valor_doado),
+            data_doacao: editingDonation.data_doacao,
+            telefone_doador: editingDonation.telefone_doador,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage =
+          result.message || "Erro desconhecido ao atualizar doação.";
+        showMessageBox(
+          "Erro na Atualização",
+          `Falha ao atualizar doação: ${errorMessage}`
+        );
+        return;
+      }
+
+      showMessageBox("Sucesso!", "Doação atualizada com sucesso!");
+      setEditingDonation(null);
+      fetchInitialDonations();
+    } catch (error) {
+      console.error("Erro ao atualizar doação:", error);
+      showMessageBox(
+        "Erro de Conexão",
+        "Não foi possível conectar ao servidor para atualizar a doação."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="bg-stone-50 text-stone-800 min-h-screen">
       <header className="bg-white shadow-sm">
@@ -763,6 +851,146 @@ const App = () => {
           </section>
         </div>
       </main>
+
+      {editingDonation && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+            <h3 className="text-xl font-bold mb-4">Editar Doação</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateDonation();
+              }}
+            >
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="edit-donorName"
+                    className="block text-sm font-medium text-stone-700"
+                  >
+                    Nome do Doador
+                  </label>
+                  <input
+                    type="text"
+                    id="edit-donorName"
+                    value={editingDonation.nome_doador || ""}
+                    onChange={(e) =>
+                      setEditingDonation({
+                        ...editingDonation,
+                        nome_doador: e.target.value,
+                      })
+                    }
+                    className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="edit-amount"
+                    className="block text-sm font-medium text-stone-700"
+                  >
+                    Valor Doado (R$)
+                  </label>
+                  <input
+                    type="number"
+                    id="edit-amount"
+                    step="0.01"
+                    min="1"
+                    value={editingDonation.valor_doado || ""}
+                    onChange={(e) =>
+                      setEditingDonation({
+                        ...editingDonation,
+                        valor_doado: parseFloat(e.target.value) || "",
+                      })
+                    }
+                    className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="edit-donationDate"
+                    className="block text-sm font-medium text-stone-700"
+                  >
+                    Data da Doação
+                  </label>
+                  <input
+                    type="date"
+                    id="edit-donationDate"
+                    value={
+                      editingDonation.data_doacao
+                        ? new Date(editingDonation.data_doacao)
+                            .toISOString()
+                            .split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setEditingDonation({
+                        ...editingDonation,
+                        data_doacao: e.target.value,
+                      })
+                    }
+                    className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="edit-phone"
+                    className="block text-sm font-medium text-stone-700"
+                  >
+                    Telefone (Opcional)
+                  </label>
+                  <input
+                    type="tel"
+                    id="edit-phone"
+                    value={editingDonation.telefone_doador || ""}
+                    onChange={(e) =>
+                      setEditingDonation({
+                        ...editingDonation,
+                        telefone_doador: e.target.value,
+                      })
+                    }
+                    className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                  />
+                </div>
+                <p className="text-sm text-stone-500">
+                  Comprovante atual:{" "}
+                  {editingDonation.url_comprovante ? (
+                    <a
+                      href={editingDonation.url_comprovante}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-teal-600 hover:underline"
+                    >
+                      Ver comprovante
+                    </a>
+                  ) : (
+                    "Nenhum"
+                  )}
+                </p>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingDonation(null)} // Fecha o modal
+                  className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {isLoading ? "Salvando..." : "Salvar Alterações"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div
         id="messageBox"
         className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden"
