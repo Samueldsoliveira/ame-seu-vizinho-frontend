@@ -29,7 +29,7 @@ const App = () => {
   // Dados das tribos para o gráfico e outras lógicas
   const TRIBES = useMemo(
     () => ({
-      start: { name: "Tribo Start", color: "rgba(229, 255, 0, 0.911)" },
+      start: { name: "Tribo Start", color: "rgb(251, 255, 0)" },
       rock: { name: "Tribo Rock", color: "rgb(255, 217, 0)" },
       safe: { name: "Tribo Safe", color: "rgba(0, 255, 255, 0.7)" },
     }),
@@ -162,7 +162,13 @@ const App = () => {
         tempId: Date.now(),
         donorName: "",
         amount: "",
-        donationDate: new Date().toISOString().slice(0, 10),
+        donationDate: (() => {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, "0");
+          const day = String(today.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        })(),
         phone: "",
         receiptFile: null,
         receiptFileName: "",

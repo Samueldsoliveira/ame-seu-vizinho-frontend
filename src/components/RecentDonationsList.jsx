@@ -9,13 +9,8 @@ const RecentDonationsList = ({
   handleViewReceipt,
 }) => {
   const [filterTerm, setFilterTerm] = useState("");
-
-  if (!currentUser)
-    return (
-      <p className="text-stone-500 text-center py-4">
-        Nenhum registro encontrado.
-      </p>
-    );
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredDonations = donations
     .filter((d) => d.tribo === currentUser.id)
@@ -28,6 +23,21 @@ const RecentDonationsList = ({
         (b.id || 0) - (a.id || 0)
     );
 
+  if (!currentUser)
+    return (
+      <p className="text-stone-500 text-center py-4">
+        Nenhum registro encontrado.
+      </p>
+    );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredDonations.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredDonations.length / itemsPerPage);
+
   if (filteredDonations.length === 0 && filterTerm === "") {
     return (
       <p className="text-stone-500 text-center py-4">
@@ -35,6 +45,14 @@ const RecentDonationsList = ({
       </p>
     );
   }
+
+  const goToNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+  };
+
+  const goToPrevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
 
   if (filteredDonations.length === 0 && filterTerm !== "") {
     return (
@@ -73,7 +91,7 @@ const RecentDonationsList = ({
         id="recent-donations-list"
         className="space-y-3 max-h-96 overflow-y-auto pr-2"
       >
-        {filteredDonations.map((d) => (
+        {currentItems.map((d) => (
           <div
             key={d.id}
             className="bg-stone-50 p-3 rounded-lg flex justify-between items-center"
@@ -84,8 +102,10 @@ const RecentDonationsList = ({
                 {formatCurrency(d.valor_doado)}
               </p>
               <p className="text-xs text-stone-500">
-                {new Date(d.data_doacao).toLocaleDateString("pt-BR")} -
-                Comprovante: {d.url_comprovante ? "Anexado" : "Não Anexado"}
+                {new Date(d.data_doacao).toLocaleDateString("pt-BR", {
+                  timeZone: "UTC",
+                })}{" "}
+                - Comprovante: {d.url_comprovante ? "Anexado" : "Não Anexado"}
               </p>
             </div>
             <div className="flex items-center space-x-2">
@@ -109,6 +129,27 @@ const RecentDonationsList = ({
           </div>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center space-x-2 mt-4">
+          <button
+            onClick={goToPrevPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:bg-stone-400 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          <span className="text-stone-700 text-sm font-semibold">
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:bg-stone-400 disabled:cursor-not-allowed"
+          >
+            Próximo
+          </button>
+        </div>
+      )}
     </section>
   );
 };

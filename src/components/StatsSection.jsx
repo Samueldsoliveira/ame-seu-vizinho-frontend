@@ -1,3 +1,4 @@
+import { ArrowLeftRight } from "lucide-react";
 import React from "react";
 
 const StatsSection = ({
@@ -61,7 +62,7 @@ const StatsSection = ({
               showMoneyForTribe ? "Ver Cestas Básicas" : "Ver Valor em Dinheiro"
             }
           >
-            ↔
+            <ArrowLeftRight />
           </button>
         </div>
       </div>
