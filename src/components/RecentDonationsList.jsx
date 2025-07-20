@@ -23,13 +23,6 @@ const RecentDonationsList = ({
         (b.id || 0) - (a.id || 0)
     );
 
-  if (!currentUser)
-    return (
-      <p className="text-stone-500 text-center py-4">
-        Nenhum registro encontrado.
-      </p>
-    );
-
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredDonations.slice(
@@ -37,14 +30,6 @@ const RecentDonationsList = ({
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredDonations.length / itemsPerPage);
-
-  if (filteredDonations.length === 0 && filterTerm === "") {
-    return (
-      <p className="text-stone-500 text-center py-4">
-        Nenhum registro encontrado.
-      </p>
-    );
-  }
 
   const goToNextPage = () => {
     setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
@@ -54,19 +39,17 @@ const RecentDonationsList = ({
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  if (filteredDonations.length === 0 && filterTerm !== "") {
-    return (
-      <p className="text-stone-500 text-center py-4">
-        Nenhuma doação encontrada para "{filterTerm}".
-      </p>
-    );
-  }
-
   return (
     <section
       aria-labelledby="recent-heading"
       className="bg-white p-6 rounded-xl shadow-lg"
     >
+      {!currentUser && (
+        <p className="text-stone-500 text-center py-4">
+          Nenhum registro encontrado.
+        </p>
+      )}
+
       <h2 id="recent-heading" className="text-xl font-bold mb-1">
         Doações Recentes (Sua Tribo)
       </h2>
@@ -91,43 +74,53 @@ const RecentDonationsList = ({
         id="recent-donations-list"
         className="space-y-3 max-h-96 overflow-y-auto pr-2"
       >
-        {currentItems.map((d) => (
-          <div
-            key={d.id}
-            className="bg-stone-50 p-3 rounded-lg flex justify-between items-center"
-          >
-            <div>
-              <p className="font-semibold">{d.nome_doador}</p>
-              <p className="font-bold text-teal-600">
-                {formatCurrency(d.valor_doado)}
-              </p>
-              <p className="text-xs text-stone-500">
-                {new Date(d.data_doacao).toLocaleDateString("pt-BR", {
-                  timeZone: "UTC",
-                })}{" "}
-                - Comprovante: {d.url_comprovante ? "Anexado" : "Não Anexado"}
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              {d.url_comprovante && (
+        {filteredDonations.length === 0 && filterTerm !== "" ? (
+          <p className="text-stone-500 text-center py-4">
+            Nenhuma doação encontrada para "{filterTerm}".
+          </p>
+        ) : filteredDonations.length === 0 && filterTerm === "" ? (
+          <p className="text-stone-500 text-center py-4">
+            Nenhum registro encontrado.
+          </p>
+        ) : (
+          currentItems.map((d) => (
+            <div
+              key={d.id}
+              className="bg-stone-50 p-3 rounded-lg flex justify-between items-center"
+            >
+              <div>
+                <p className="font-semibold">{d.nome_doador}</p>
+                <p className="font-bold text-teal-600">
+                  {formatCurrency(d.valor_doado)}
+                </p>
+                <p className="text-xs text-stone-500">
+                  {new Date(d.data_doacao).toLocaleDateString("pt-BR", {
+                    timeZone: "UTC",
+                  })}{" "}
+                  - Comprovante: {d.url_comprovante ? "Anexado" : "Não Anexado"}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                {d.url_comprovante && (
+                  <button
+                    onClick={() => handleViewReceipt(d.url_comprovante)}
+                    className="p-2 text-stone-500 hover:text-blue-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
+                    title="Ver Comprovante"
+                  >
+                    <Eye size={18} />
+                  </button>
+                )}
                 <button
-                  onClick={() => handleViewReceipt(d.url_comprovante)}
-                  className="p-2 text-stone-500 hover:text-blue-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
-                  title="Ver Comprovante"
+                  onClick={() => handleEditClick(d)}
+                  className="p-2 text-stone-500 hover:text-teal-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
+                  title="Editar Doação"
                 >
-                  <Eye size={18} />
+                  <Pencil size={18} />
                 </button>
-              )}
-              <button
-                onClick={() => handleEditClick(d)}
-                className="p-2 text-stone-500 hover:text-teal-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
-                title="Editar Doação"
-              >
-                <Pencil size={18} />
-              </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
       {totalPages > 1 && (
         <div className="flex justify-center items-center space-x-2 mt-4">
