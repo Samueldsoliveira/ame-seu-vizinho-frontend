@@ -1,5 +1,5 @@
 import { Eye, Pencil } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 
 const RecentDonationsList = ({
   donations,
@@ -8,6 +8,8 @@ const RecentDonationsList = ({
   handleEditClick,
   handleViewReceipt,
 }) => {
+  const [filterTerm, setFilterTerm] = useState("");
+
   if (!currentUser)
     return (
       <p className="text-stone-500 text-center py-4">
@@ -15,18 +17,29 @@ const RecentDonationsList = ({
       </p>
     );
 
-  const userDonations = donations
+  const filteredDonations = donations
     .filter((d) => d.tribo === currentUser.id)
+    .filter((d) =>
+      d.nome_doador.toLowerCase().includes(filterTerm.toLowerCase())
+    )
     .sort(
       (a, b) =>
         new Date(b.data_doacao).getTime() - new Date(a.data_doacao).getTime() ||
         (b.id || 0) - (a.id || 0)
     );
 
-  if (userDonations.length === 0) {
+  if (filteredDonations.length === 0 && filterTerm === "") {
     return (
       <p className="text-stone-500 text-center py-4">
         Nenhum registro encontrado.
+      </p>
+    );
+  }
+
+  if (filteredDonations.length === 0 && filterTerm !== "") {
+    return (
+      <p className="text-stone-500 text-center py-4">
+        Nenhuma doação encontrada para "{filterTerm}".
       </p>
     );
   }
@@ -43,11 +56,24 @@ const RecentDonationsList = ({
         Aqui você vê uma lista das últimas doações que você registrou para sua
         tribo. A lista é atualizada assim que você envia novos registros.
       </p>
+      <div className="mb-4">
+        <label htmlFor="search-donor" className="sr-only">
+          Buscar Doador
+        </label>
+        <input
+          type="text"
+          id="search-donor"
+          placeholder="Buscar doador por nome..."
+          value={filterTerm}
+          onChange={(e) => setFilterTerm(e.target.value)}
+          className="mt-1 block w-full px-3 py-2 bg-white border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+        />
+      </div>
       <div
         id="recent-donations-list"
         className="space-y-3 max-h-96 overflow-y-auto pr-2"
       >
-        {userDonations.map((d) => (
+        {filteredDonations.map((d) => (
           <div
             key={d.id}
             className="bg-stone-50 p-3 rounded-lg flex justify-between items-center"
