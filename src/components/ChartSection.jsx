@@ -22,7 +22,7 @@ const ChartSection = ({ chartData, TRIBES }) => {
           labels: Object.values(TRIBES).map((t) => t.name),
           datasets: [
             {
-              label: "Total Arrecadado (R$)",
+              label: "Cestas de Alimento Arrecadadas",
               data: chartData,
               backgroundColor: Object.values(TRIBES).map((t) => t.color),
               borderColor: Object.values(TRIBES).map((t) =>
@@ -38,11 +38,11 @@ const ChartSection = ({ chartData, TRIBES }) => {
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            title: { display: true, text: "Arrecadação por Tribo" },
+            title: { display: true, text: "Cestas de Alimento por Tribo" },
             tooltip: {
               callbacks: {
                 label: function (context) {
-                  return ` R$ ${context.raw.toFixed(2)}`;
+                  return ` ${context.raw.toFixed(0)} Cestas`;
                 },
               },
             },
@@ -50,7 +50,7 @@ const ChartSection = ({ chartData, TRIBES }) => {
           scales: {
             x: {
               beginAtZero: true,
-              title: { display: true, text: "Valor (R$)" },
+              title: { display: true, text: "Quantidade (Cestas)" },
             },
           },
         },

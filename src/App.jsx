@@ -57,13 +57,14 @@ const App = () => {
     });
   }, []);
 
-  const chartData = useMemo(() => {
+  const chartBasketData = useMemo(() => {
     return Object.keys(TRIBES).map((tribeId) => {
-      return donations
+      const totalMoney = donations
         .filter((d) => d.tribo === tribeId)
         .reduce((sum, d) => sum + d.valor_doado, 0);
+      return Math.floor(totalMoney / BASKET_COST); // Converte dinheiro para cestas
     });
-  }, [donations, TRIBES]);
+  }, [donations, TRIBES, BASKET_COST]);
 
   // Função para buscar todas as doações do backend
   const fetchInitialDonations = useCallback(async () => {
@@ -433,7 +434,7 @@ const App = () => {
               setShowMoneyForTribe={setShowMoneyForTribe}
             />
 
-            <ChartSection chartData={chartData} TRIBES={TRIBES} />
+            <ChartSection chartData={chartBasketData} TRIBES={TRIBES} />
 
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
               <NewDonationForm
