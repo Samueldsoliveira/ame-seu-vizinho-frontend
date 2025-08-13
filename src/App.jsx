@@ -12,7 +12,6 @@ import MessageBox from "./components/MessageBox";
 const App = () => {
   const BASKET_COST = 35;
 
-  // Variável de ambiente para a URL da API
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -23,10 +22,8 @@ const App = () => {
   const [editingDonation, setEditingDonation] = useState(null);
   const [showMoneyForTribe, setShowMoneyForTribe] = useState(true);
 
-  // Ref para o select da tribo na tela de login
   const triboSelectRef = useRef(null);
 
-  // Dados das tribos para o gráfico e outras lógicas
   const TRIBES = useMemo(
     () => ({
       start: { name: "Tribo Start", color: "rgb(251, 255, 0)" },
@@ -62,7 +59,7 @@ const App = () => {
       const totalMoney = donations
         .filter((d) => d.tribo === tribeId)
         .reduce((sum, d) => sum + d.valor_doado, 0);
-      return Math.floor(totalMoney / BASKET_COST); // Converte dinheiro para cestas
+      return Math.floor(totalMoney / BASKET_COST);
     });
   }, [donations, TRIBES, BASKET_COST]);
 
@@ -97,7 +94,6 @@ const App = () => {
     }
   }, [API_BASE_URL, currentUser, showMessageBox]);
 
-  // Função para lidar com o login do usuário
   const performLogin = useCallback(async () => {
     const selectedTribeId = triboSelectRef.current?.value;
     const enteredPassword = password;
@@ -316,6 +312,27 @@ const App = () => {
     setIsLoading(true);
 
     try {
+      if (editingDonation.newReceiptFile) {
+        const formData = new FormData();
+        formData.append("file", editingDonation.newReceiptFile);
+
+        const uploadResp = await fetch(
+          `${API_BASE_URL}/donations/${editingDonation.id}/receipt`,
+          {
+            method: "PUT",
+            body: formData,
+          }
+        );
+
+        const uploadResult = await uploadResp.json().catch(() => ({}));
+        if (!uploadResp.ok) {
+          const errorMessage =
+            uploadResult?.message || "Falha ao enviar o novo comprovante.";
+          showMessageBox("Erro no Comprovante", errorMessage);
+          return;
+        }
+      }
+
       const response = await fetch(
         `${API_BASE_URL}/donations/${editingDonation.id}`,
         {
@@ -363,6 +380,13 @@ const App = () => {
     fetchInitialDonations,
     showMessageBox,
   ]);
+
+  const handleEditReceiptChange = useCallback((file) => {
+    setEditingDonation((prev) => {
+      if (!prev) return prev;
+      return { ...prev, newReceiptFile: file || null };
+    });
+  }, []);
 
   const handleViewReceipt = useCallback(
     (url) => {
@@ -463,6 +487,7 @@ const App = () => {
         editingDonation={editingDonation}
         setEditingDonation={setEditingDonation}
         handleUpdateDonation={handleUpdateDonation}
+        handleEditReceiptChange={handleEditReceiptChange}
         isLoading={isLoading}
       />
       <MessageBox />

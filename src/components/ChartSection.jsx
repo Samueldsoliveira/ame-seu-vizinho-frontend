@@ -6,7 +6,6 @@ const ChartSection = ({ chartData, TRIBES }) => {
   let tribosChartInstance = useRef(null);
 
   useEffect(() => {
-    // Garante que o canvas está disponível
     if (!chartRef.current) return;
 
     const ctx = chartRef.current.getContext("2d");
@@ -85,8 +84,6 @@ const ChartSection = ({ chartData, TRIBES }) => {
   );
 };
 
-// Função de comparação customizada para React.memo
-// Esta função é usada pelo React.memo para decidir se o componente deve re-renderizar.
 const arePropsEqual = (prevProps, nextProps) => {
   if (prevProps.TRIBES !== nextProps.TRIBES) {
     return false;
@@ -98,7 +95,7 @@ const arePropsEqual = (prevProps, nextProps) => {
 
   for (let i = 0; i < prevProps.chartData.length; i++) {
     if (prevProps.chartData[i] !== nextProps.chartData[i]) {
-      return false; // Um valor numérico no array de dados do gráfico mudou
+      return false;
     }
   }
   return true;
