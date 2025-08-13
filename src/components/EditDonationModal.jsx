@@ -4,9 +4,10 @@ const EditDonationModal = ({
   editingDonation,
   setEditingDonation,
   handleUpdateDonation,
+  handleEditReceiptChange,
   isLoading,
 }) => {
-  if (!editingDonation) return null; // Não renderiza se não houver doação em edição
+  if (!editingDonation) return null;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -125,11 +126,34 @@ const EditDonationModal = ({
                 "Nenhum"
               )}
             </p>
+            <div>
+              <label
+                htmlFor="edit-receipt"
+                className="block text-sm font-medium text-stone-700 mt-2"
+              >
+                Substituir Comprovante (.png, .jpg, .pdf)
+              </label>
+              <input
+                type="file"
+                id="edit-receipt"
+                onChange={(e) => handleEditReceiptChange(e.target.files?.[0] || null)}
+                className="mt-1 block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                accept=".png,.jpg,.jpeg,.pdf"
+              />
+              {editingDonation.newReceiptFile && (
+                <p className="text-xs text-stone-500 mt-1">
+                  Novo arquivo selecionado: {editingDonation.newReceiptFile.name}
+                </p>
+              )}
+              <p className="text-xs text-stone-400 mt-1">
+                Deixe em branco para manter o comprovante atual.
+              </p>
+            </div>
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"
-              onClick={() => setEditingDonation(null)} // Fecha o modal
+              onClick={() => setEditingDonation(null)}
               className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
             >
               Cancelar
