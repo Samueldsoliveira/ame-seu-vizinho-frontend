@@ -402,6 +402,35 @@ const App = () => {
     [showMessageBox]
   );
 
+  const handleDeleteDonation = useCallback(
+    async (donation) => {
+      if (!donation?.id) return;
+      setIsLoading(true);
+      try {
+        const resp = await fetch(`${API_BASE_URL}/donations/${donation.id}`, {
+          method: "DELETE",
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          const msg = result?.message || "Falha ao excluir doação.";
+          showMessageBox("Erro ao Excluir", msg);
+          return;
+        }
+        showMessageBox("Excluída", "Doação marcada como excluída com sucesso!");
+        fetchInitialDonations();
+      } catch (err) {
+        console.error("Erro ao excluir doação:", err);
+        showMessageBox(
+          "Erro de Conexão",
+          "Não foi possível conectar ao servidor para excluir a doação."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [API_BASE_URL, fetchInitialDonations, showMessageBox]
+  );
+
   useEffect(() => {
     const storedUser = localStorage.getItem("currentUserAmeSeuVizinho");
     if (storedUser) {
@@ -477,6 +506,7 @@ const App = () => {
                 formatCurrency={formatCurrency}
                 handleEditClick={setEditingDonation}
                 handleViewReceipt={handleViewReceipt}
+                handleDeleteClick={handleDeleteDonation}
               />
             </div>
           </main>
