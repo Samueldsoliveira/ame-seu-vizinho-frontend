@@ -1,4 +1,4 @@
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, Trash } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 const RecentDonationsList = ({
@@ -7,13 +7,17 @@ const RecentDonationsList = ({
   formatCurrency,
   handleEditClick,
   handleViewReceipt,
+  handleDeleteClick,
 }) => {
   const [filterTerm, setFilterTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [confirmDonationId, setConfirmDonationId] = useState(null);
+  const [confirmChecked, setConfirmChecked] = useState(false);
 
   const filteredDonations = donations
     .filter((d) => d.tribo === currentUser.id)
+    .filter((d) => !d.excluido)
     .filter((d) =>
       d.nome_doador.toLowerCase().includes(filterTerm.toLowerCase())
     )
@@ -114,13 +118,60 @@ const RecentDonationsList = ({
                     <Eye size={18} />
                   </button>
                 )}
-                <button
-                  onClick={() => handleEditClick(d)}
-                  className="p-2 text-stone-500 hover:text-teal-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
-                  title="Editar Doação"
-                >
-                  <Pencil size={18} />
-                </button>
+                {confirmDonationId === d.id ? (
+                  <div className="flex items-center space-x-2">
+                    <label className="flex items-center text-xs text-stone-600">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={confirmChecked}
+                        onChange={(e) => setConfirmChecked(e.target.checked)}
+                      />
+                      Confirmo a exclusão
+                    </label>
+                    <button
+                      onClick={() => {
+                        setConfirmDonationId(null);
+                        setConfirmChecked(false);
+                      }}
+                      className="px-2 py-1 text-stone-600 hover:text-stone-800 rounded-md hover:bg-stone-100 text-xs"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!confirmChecked) return;
+                        handleDeleteClick(d);
+                        setConfirmDonationId(null);
+                        setConfirmChecked(false);
+                      }}
+                      disabled={!confirmChecked}
+                      className="px-2 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700 disabled:bg-stone-400"
+                    >
+                      Confirmar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleEditClick(d)}
+                      className="p-2 text-stone-500 hover:text-teal-600 rounded-full hover:bg-stone-100 transition-colors duration-200"
+                      title="Editar Doação"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setConfirmDonationId(d.id);
+                        setConfirmChecked(false);
+                      }}
+                      className="p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50 transition-colors duration-200"
+                      title="Excluir Doação"
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))
